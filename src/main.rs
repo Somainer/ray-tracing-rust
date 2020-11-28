@@ -10,7 +10,6 @@ mod util;
 mod vec3;
 mod ppm;
 mod color;
-mod progress;
 mod ray;
 mod hittable;
 mod sphere;
@@ -22,7 +21,7 @@ mod scene;
 
 fn get_scene() -> Scene<HittableList> {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1200;
+    let image_width = 1920;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
 
     let samples_per_pixel = 500;
@@ -57,5 +56,5 @@ fn get_scene() -> Scene<HittableList> {
 fn main() {
     let path = "image.ppm";
 
-    get_scene().get_ppm_file().write_to(path.to_string()).unwrap()
+    get_scene().get_ppm_file_parallel().write_to(path.to_string()).unwrap()
 }
