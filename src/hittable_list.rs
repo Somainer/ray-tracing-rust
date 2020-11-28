@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
 use crate::material::{Diffuse, Metal, Dielectric};
@@ -10,7 +8,7 @@ use crate::util::{random_double, random_range};
 use crate::vec3d_extensions::RandomGen;
 
 pub struct HittableList {
-    objects: Vec<Rc<dyn Hittable>>
+    objects: Vec<Box<dyn Hittable + Send + Sync>>
 }
 
 impl HittableList {
@@ -22,14 +20,14 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Box<dyn Hittable + Send + Sync>) {
         self.objects.push(object);
     }
 
     pub fn random() -> Self {
         let mut world = Self::new();
-        let ground_material = Rc::new(Diffuse { albedo: Color3d::only(0.5) });
-        world.add(Rc::new(
+        let ground_material = Box::new(Diffuse { albedo: Color3d::only(0.5) });
+        world.add(Box::new(
             Sphere::new(
                 Point3d::new(0.0, -1000.0, 0.0),
                 1000.0,
@@ -43,16 +41,16 @@ impl HittableList {
                 if (center - Point3d::new(4.0, 0.2, 0.0)).norm() > 0.9 {
                     if choose_material < 0.8 {
                         let albedo = Color3d::random() * Color3d::random();
-                        world.add(Rc::new(Sphere::new(
+                        world.add(Box::new(Sphere::new(
                             center,
                             0.2,
-                            Rc::new(Diffuse { albedo })
+                            Box::new(Diffuse { albedo })
                         )));
                     } else if choose_material < 0.95 {
                         let albedo = Color3d::random_range(0.5, 1.0);
                         let fuzz = random_range(0.0, 0.5);
-                        let material = Rc::new(Metal { albedo, fuzz });
-                        world.add(Rc::new(
+                        let material = Box::new(Metal { albedo, fuzz });
+                        world.add(Box::new(
                             Sphere::new(
                                 center,
                                 0.2,
@@ -60,8 +58,8 @@ impl HittableList {
                             )
                         ));
                     } else {
-                        let material = Rc::new(Dielectric { index_refraction: 1.5 });
-                        world.add(Rc::new(
+                        let material = Box::new(Dielectric { index_refraction: 1.5 });
+                        world.add(Box::new(
                             Sphere::new(
                                 center, 0.2, material
                             )
@@ -71,16 +69,16 @@ impl HittableList {
             }
         }
 
-        world.add(Rc::new(Sphere::new(
+        world.add(Box::new(Sphere::new(
             Point3d::new(0.0, 1.0, 0.0), 1.0,
-            Rc::new(Dielectric { index_refraction: 1.5 })
+            Box::new(Dielectric { index_refraction: 1.5 })
         )));
-        world.add(Rc::new(Sphere::new(
+        world.add(Box::new(Sphere::new(
             Point3d::new(-4.0, 1.0, 0.0), 1.0,
-            Rc::new(Diffuse { albedo: Color3d::new(0.7, 0.6, 0.5) }))));
-        world.add(Rc::new(Sphere::new(
+            Box::new(Diffuse { albedo: Color3d::new(0.7, 0.6, 0.5) }))));
+        world.add(Box::new(Sphere::new(
             Point3d::new(4.0, 1.0, 0.0), 1.0,
-            Rc::new(Metal { albedo: Color3d::new(0.7, 0.6, 0.5), fuzz: 0.0 }))));
+            Box::new(Metal { albedo: Color3d::new(0.7, 0.6, 0.5), fuzz: 0.0 }))));
         world
     }
 }

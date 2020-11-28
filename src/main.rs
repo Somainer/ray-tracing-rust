@@ -25,7 +25,7 @@ fn get_scene() -> Scene<HittableList> {
     let image_width = 1200;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
 
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 100;
 
     let world = HittableList::random();
 
@@ -57,5 +57,5 @@ fn get_scene() -> Scene<HittableList> {
 fn main() {
     let path = "image.ppm";
 
-    get_scene().get_ppm_file().write_to(path.to_string()).unwrap()
+    get_scene().get_ppm_file_parallel().write_to(path.to_string()).unwrap()
 }
