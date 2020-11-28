@@ -33,7 +33,7 @@ pub fn random_range(min: f64, max: f64) -> f64 {
 }
 
 #[inline]
-pub fn clamp<T: num_traits::Float>(x: T, min: T, max: T) -> T {
+pub fn clamp<T: PartialOrd>(x: T, min: T, max: T) -> T {
     if x < min { min }
     else if x > max { max }
     else { x }

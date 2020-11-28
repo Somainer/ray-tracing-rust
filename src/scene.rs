@@ -1,4 +1,5 @@
 use std::f64::INFINITY;
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle, ProgressIterator};
 use rayon::prelude::*;
 
 use crate::camera::Camera;
@@ -6,7 +7,6 @@ use crate::color::Color3d;
 use crate::hittable::Hittable;
 use crate::material::Material;
 use crate::ppm::PPMFile;
-use crate::progress::{ProgressIterable, Progress, ProgressLike};
 use crate::ray::Ray;
 use crate::util::random_double;
 
@@ -42,8 +42,10 @@ impl<T> Scene<T>
 
     pub fn render(&self) -> Vec<Color3d> {
         let mut buf = vec![Color3d::zero(); self.height * self.width];
+        let pb = self.get_progress_bar();
+        let start_time = std::time::Instant::now();
 
-        for j in (0..self.height).iter_progressed() {
+        for j in (0..self.height).progress_with(pb) {
             for i in 0..self.width {
                 let mut color = Color3d::zero();
                 for _ in 0..self.spp {
@@ -54,21 +56,34 @@ impl<T> Scene<T>
             }
         }
 
+        println!("\nTracing ({}*{}, spp={}) finished in {}.",
+                 self.width, self.height, self.spp,
+                 indicatif::HumanDuration(start_time.elapsed()));
+
         buf
     }
 
     pub fn render_parallel(&self) -> Vec<Color3d> {
-        let progress = Progress::new(80);
-        let result = (0..self.height).into_par_iter().flat_map(|j| {
-            progress.with_progress((((j + 1) as f64 / self.height as f64) * 100.0) as usize).print();
+        let start_time = std::time::Instant::now();
+        let pb = self.get_progress_bar();
+        let result = (0..self.height).into_par_iter().progress_with(pb).flat_map(|j| {
             (0..self.width).into_par_iter().map(move |i| {
                 (0..self.spp).map(|_| self.render_single(i, j)).sum::<Color3d>()
             })
         }).collect();
 
-        progress.with_progress(100).print();
-        println!();
+        println!("\nTracing ({}*{}, spp={}) finished in {}.",
+                 self.width, self.height, self.spp,
+                 indicatif::HumanDuration(start_time.elapsed()));
         result
+    }
+
+    fn get_progress_bar(&self) -> ProgressBar {
+        ProgressBar::new(self.height as u64)
+            .with_style(
+                ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>4}/{len:4} ({eta})")
+                .progress_chars("#>-"))
     }
 
     #[inline]
