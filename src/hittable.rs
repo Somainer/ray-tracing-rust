@@ -4,20 +4,21 @@ use crate::material::Material;
 use std::rc::Rc;
 use std::borrow::Borrow;
 
-pub struct HitRecord {
+#[derive(Clone)]
+pub struct HitRecord<'a> {
     pub point: Point3d,
     pub normal: Vec3d,
     pub t: f64,
-    pub material: Rc<dyn Material>,
+    pub material: &'a (dyn Material + Send + Sync),
     front_face: bool
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     pub fn new_with_face_normal(
         t: f64,
         point: Point3d,
         outward_normal: Vec3d,
-        material: Rc<dyn Material>,
+        material: &'a (dyn Material + Send + Sync),
         ray: &Ray,
     ) -> Self {
         let front_face = ray.direction().dot(&outward_normal) < 0.0;

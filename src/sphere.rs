@@ -1,28 +1,23 @@
 use crate::vec3::Point3d;
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
-use std::rc::Rc;
 use crate::material::Material;
+use std::borrow::Borrow;
 
 pub struct Sphere {
     center: Point3d,
     radius: f64,
-    pub material: Rc<dyn Material>
+    pub material: Box<dyn Material + Send + Sync>
 }
 
 impl Sphere {
-    pub fn new (center: Point3d, radius: f64, material: Rc<dyn Material>) -> Self {
+    pub fn new (center: Point3d, radius: f64, material: Box<dyn Material + Send + Sync>) -> Self {
         Self {
             center, radius, material
         }
     }
     property! { center: Point3d }
     property! { radius: f64 }
-
-    #[inline]
-    pub fn material_clone(&self) -> Rc<dyn Material> {
-        self.material.clone()
-    }
 }
 
 impl Hittable for Sphere {
@@ -49,7 +44,7 @@ impl Hittable for Sphere {
         let point = ray.at(root);
         Some(HitRecord::new_with_face_normal(
             root, point, (point - self.center) / self.radius,
-            self.material_clone(), &ray,
+            self.material.borrow(), &ray,
         ))
     }
 }
