@@ -87,5 +87,3 @@ pub fn ray_color<H: Hittable>(ray: &Ray, world: &H, max_depth: i32) -> Color3d {
         )
     }
 }
-
-unsafe impl <T: Hittable> std::marker::Send for Scene<T> {}
