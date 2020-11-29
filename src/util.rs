@@ -2,6 +2,7 @@ use std::f64::consts::PI;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use crate::vec3d_extensions::RandomGen;
+use rand::distributions::uniform::SampleUniform;
 #[macro_export]
 macro_rules! property {
     ($($name: ident : $type: ty)+) => ($(
@@ -28,8 +29,21 @@ pub fn random_double() -> f64 {
 }
 
 pub fn random_range(min: f64, max: f64) -> f64 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(min, max)
+    if max - min <= f64::EPSILON {
+        min
+    } else {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(min, max)
+    }
+}
+
+pub fn random_in_range<T: Sized + SampleUniform + Eq>(min: T, max: T) -> T {
+    if min == max {
+        min
+    } else {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(min, max)
+    }
 }
 
 #[inline]
