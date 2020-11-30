@@ -6,6 +6,12 @@ pub trait Texture: Send + Sync {
     fn eval(&self, u: f64, v: f64, p: Point3d) -> Color3d;
 }
 
+impl Texture for Box<dyn Texture> {
+    fn eval(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+        self.as_ref().eval(u, v, p)
+    }
+}
+
 #[derive(Clone)]
 pub struct SolidColor {
     pub color: Color3d

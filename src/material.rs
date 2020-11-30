@@ -12,6 +12,16 @@ pub trait Material {
     fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d;
 }
 
+impl Material for Box<dyn Material + Send + Sync> {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
+        self.as_ref().scatter(ray_in, hit_record)
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+        self.as_ref().emitted(u, v, p)
+    }
+}
+
 macro_rules! no_emission {
     () => {
         #[inline]
@@ -131,4 +141,34 @@ impl Material for DiffuseLight {
     fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
         self.emit.eval(u, v, p)
     }
+}
+
+pub struct Isotropic<T>
+where T: Texture {
+    albedo: T
+}
+
+impl<T: Texture> Isotropic<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo }
+    }
+}
+
+impl Isotropic<SolidColor> {
+    pub fn for_color(color: Color3d) -> Self {
+        Self::new(SolidColor::new(color))
+    }
+}
+
+impl<T> Material for Isotropic<T>
+where T: Texture {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
+        let scattered =
+            Ray::new_with_time(hit_record.point, Vec3d::random_in_unit_sphere(), ray_in.time());
+        let attenuation = self.albedo.eval(hit_record.u, hit_record.v, hit_record.point);
+
+        Some((attenuation, scattered))
+    }
+
+    no_emission!();
 }

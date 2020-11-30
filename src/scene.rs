@@ -74,7 +74,7 @@ impl Scene {
 
         println!("\nTracing ({}*{}, spp={}) finished in {}.",
                  self.width, self.height, self.spp,
-                 indicatif::HumanDuration(start_time.elapsed()));
+                 indicatif::FormattedDuration(start_time.elapsed()));
 
         buf
     }
@@ -95,7 +95,7 @@ impl Scene {
 
         println!("\nTracing ({}*{}, spp={}) finished in {}.",
                  self.width, self.height, self.spp,
-                 indicatif::HumanDuration(start_time.elapsed()));
+                 indicatif::FormattedDuration(start_time.elapsed()));
         result
     }
 

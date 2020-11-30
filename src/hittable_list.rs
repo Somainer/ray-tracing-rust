@@ -4,12 +4,16 @@ use crate::material::{Diffuse, Metal, Dielectric, DiffuseLight};
 use crate::color::Color3d;
 use crate::sphere::{Sphere, MovingSphere};
 use crate::vec3::{Point3d, Vec3d};
-use crate::util::{random_double, random_range};
+use crate::util::{random_double, random_range, Angle};
 use crate::vec3d_extensions::RandomGen;
 use crate::acceleration::aabb::AABB;
 use crate::texture::{CheckerTexture, NoiseTexture, SolidColor};
 use crate::image_texture::ImageTexture;
 use crate::rectangle::{XYRect, YZRect, XZRect, RectBox};
+use crate::transformations::Transformable;
+use crate::subsurface::ConstantMedium;
+use std::any::Any;
+use crate::acceleration::bvh::OwnedBVH;
 
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable + Send + Sync>>
@@ -179,13 +183,102 @@ impl HittableList {
         ));
 
         world.add(Box::new(
-            RectBox::new(Point3d::new(130.0, 0.0, 65.0), Point3d::new(295.0, 165.0, 230.0), Box::new(white()))
+            RectBox::new(Point3d::new(0.0, 0.0, 0.0), Point3d::new(165.0, 330.0, 165.0), Box::new(white()))
+                .rotate_y(Angle::DegAngle(15.0))
+                .translate(Vec3d::new(265.0, 0.0, 295.0))
         ));
         world.add(Box::new(
-            RectBox::new(Point3d::new(265.0, 0.0, 295.0), Point3d::new(430.0, 330.0, 460.0), Box::new(white()))
+            RectBox::new(Point3d::new(0.0, 0.0, 0.0), Point3d::new(165.0, 165.0, 165.0), Box::new(white()))
+                .rotate_y(Angle::DegAngle(-18.0))
+                .translate(Vec3d::new(130.0, 0.0, 65.0))
         ));
 
         world
+    }
+
+    pub fn cornel_smoke() -> Self {
+        let mut world = Self::cornel_box();
+        let box2 = world.objects.pop().unwrap();
+        let box1 = world.objects.pop().unwrap();
+
+        world.add(Box::new(ConstantMedium::for_color(box1, 0.01, Color3d::zero())));
+        world.add(Box::new(ConstantMedium::for_color(box2, 0.01, Color3d::one())));
+
+        world
+    }
+
+    pub fn all_feature_box() -> Self {
+        let mut boxes1 = Self::new();
+        let ground = || Diffuse::for_color(Color3d::new(0.48, 0.82, 0.53));
+        let boxes_per_side = 20;
+        for i in 0..boxes_per_side {
+            for j in 0..boxes_per_side {
+                let w = 100.0;
+                let x0 = -1000.0 + i as f64 * w;
+                let z0 = -1000.0 + j as f64 * w;
+                let y0 = 0.0;
+                let x1 = x0 + w;
+                let y1 = random_range(1.0, 101.0);
+                let z1 = z0 + w;
+                boxes1.add(Box::new(
+                    RectBox::new(Point3d::new(x0, y0, z0), Point3d::new(x1, y1, z1), Box::new(ground()))
+                ));
+            }
+        }
+        let mut objects = Self::new();
+
+        objects.add(Box::new(OwnedBVH::new(boxes1.objects, 0.0, 1.0)));
+
+        let light = DiffuseLight::new(Box::new(SolidColor::new(Color3d::only(7.0))));
+        objects.add(Box::new(
+            XZRect::new((123.0, 147.0), (423.0, 412.0), 554.0, Box::new(light))
+        ));
+
+        let center1 = Point3d::new(400.0, 400.0, 200.0);
+        let center2 = center1 + Vec3d::new(30.0, 0.0, 0.0);
+        let moving_sphere_material = Diffuse::for_color(Color3d::new(0.7, 0.3, 0.1));
+        objects.add(Box::new(MovingSphere::new(center1, center2, 0.0, 1.0, 50.0, Box::new(moving_sphere_material))));
+        objects.add(Box::new(
+            Sphere::new(Point3d::new(260.0, 150.0, 45.0), 50.0, Box::new(Dielectric{ index_refraction: 1.5 }))
+        ));
+        objects.add(Box::new(
+            Sphere::new(Point3d::new(0.0, 150.0, 145.0), 50.0, Box::new(Metal { albedo: Color3d::new(0.8, 0.8, 0.9), fuzz: 1.0 }))
+        ));
+
+        let boundary = || Sphere::new(Point3d::new(360.0, 150.0, 145.0), 70.0, Box::new(Dielectric { index_refraction: 1.5 }));
+        objects.add(Box::new(boundary()));
+        objects.add(Box::new(ConstantMedium::for_color(boundary(), 0.2, Color3d::new(0.2, 0.4, 0.9))));
+        objects.add(Box::new(
+            ConstantMedium::for_color(
+                Sphere::new(Point3d::zero(), 5000.0, Box::new(Dielectric{index_refraction: 1.5})),
+                0.0001,
+                Color3d::one()
+            )));
+
+        let earth_texture =
+            ImageTexture::from_file("earthmap.jpg".to_string()).unwrap();
+        let material = Diffuse::new(Box::new(earth_texture));
+        objects.add(Box::new(
+            Sphere::new(Point3d::new(400.0, 200.0, 400.0), 100.0, Box::new(material))
+        ));
+
+        let perlin_texture = NoiseTexture::new(0.1);
+        objects.add(Box::new(
+            Sphere::new(Point3d::new(220.0, 280.0, 300.0), 80.0, Box::new(Diffuse::new(Box::new(perlin_texture))))
+        ));
+
+        let mut boxes2 = Self::new();
+        let white = || Diffuse::for_color(Color3d::only(0.73));
+        for _ in 0..1000 {
+            boxes2.add(Box::new(Sphere::new(Point3d::random_range(0.0, 165.0), 10.0, Box::new(white()))));
+        }
+        let node = OwnedBVH::new(boxes2.objects, 0.0, 1.0)
+            .rotate_y(Angle::DegAngle(15.0))
+            .translate(Vec3d::new(-100.0, 270.0, 395.0));
+
+        objects.add(Box::new(node));
+
+        objects
     }
 }
 
