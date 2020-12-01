@@ -2,7 +2,7 @@ use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::color::Color3d;
 use crate::vec3::{Point3d, Vec3d};
-use std::ops::Neg;
+use std::ops::{Neg, Deref};
 use crate::util::random_double;
 use crate::texture::{Texture, SolidColor};
 

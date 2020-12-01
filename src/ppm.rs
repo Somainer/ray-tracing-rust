@@ -1,4 +1,4 @@
-use crate::color::{Color3d, write_color};
+use crate::color::{Color3d, write_color, corrected_color};
 use std::io::Write;
 
 pub struct PPMFile {
@@ -37,6 +37,15 @@ impl PPMFile {
         }
 
         Ok(())
+    }
+
+    pub fn image_buffer(&self) -> image::RgbImage {
+        image::RgbImage::from_raw(
+            self.width as u32,
+            self.height as u32,
+            self.buf.iter()
+                .flat_map(|&p| corrected_color(p, self.spp).to_vec()).collect()
+        ).unwrap()
     }
 
     property! { height: usize }
