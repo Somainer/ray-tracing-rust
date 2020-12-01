@@ -5,3 +5,6 @@ This repository is a rust implementation of
 
 Example (spp=500):
 ![](./images/random-scene.jpg)
+
+Cornel Box (spp=10000):
+![](./images/cornel-box.jpg)

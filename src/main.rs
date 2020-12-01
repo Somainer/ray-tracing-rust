@@ -3,6 +3,7 @@ use crate::hittable_list::HittableList;
 use crate::vec3::{Point3d, Vec3d};
 use crate::camera::Camera;
 use crate::util::Angle;
+use crate::color::Color3d;
 
 #[macro_use]
 mod util;
@@ -18,29 +19,45 @@ mod camera;
 mod material;
 mod vec3d_extensions;
 mod scene;
+mod acceleration;
+mod texture;
+mod perlin;
+mod image_texture;
+mod rectangle;
+mod transformations;
+mod subsurface;
 
-fn get_scene() -> Scene<HittableList> {
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1920;
+fn get_scene() -> Scene {
+    // let aspect_ratio = 16.0 / 9.0;
+    let aspect_ratio = 1.0;
+    let image_width = 800;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
 
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 10000;
 
-    let world = HittableList::random();
+    // let world = HittableList::random();
+    // let world = HittableList::perlin_noise();
+    // let world = HittableList::earth();
+    let world = HittableList::all_feature_box();
 
-    let aperture = 0.1;
+    let aperture = 0.0;
     let dist_to_focus = 10.0;
-    let look_from = Point3d::new(13.0, 2.0, 3.0);
-    let look_at = Point3d::new(0.0, 0.0, 0.0);
-    let camera = Camera::new(
+    let look_from = Point3d::new(478.0, 278.0, -600.0);
+    let look_at = Point3d::new(278.0, 278.0, 0.0);
+    // let look_at = Point3d::zero();
+    let camera = Camera::new_with_shutter(
         look_from,
         look_at,
         Vec3d::new(0.0, 1.0, 0.0),
         aspect_ratio,
-        Angle::DegAngle(20.0),
+        Angle::DegAngle(40.0),
         aperture,
         dist_to_focus,
+        0.0, 1.0
     );
+
+    // let background = Color3d::new(0.70, 0.80, 1.00);
+    let background = Color3d::zero();
 
     let scene = Scene::new(
         image_height,
@@ -48,6 +65,7 @@ fn get_scene() -> Scene<HittableList> {
         world,
         camera,
         samples_per_pixel,
+        background,
     );
 
     scene

@@ -228,6 +228,22 @@ impl<T: num_traits::Float> Vec3<T> {
 
         self.mul(T::one() / norm)
     }
+
+    pub fn element_wise_min(a: Self, b: Self) -> Self {
+        Self {
+            x: a.x.min(b.x),
+            y: a.y.min(b.y),
+            z: a.z.min(b.z)
+        }
+    }
+
+    pub fn element_wise_max(a: Self, b: Self) -> Self {
+        Self {
+            x: a.x.max(b.x),
+            y: a.y.max(b.y),
+            z: a.z.max(b.z)
+        }
+    }
 }
 
 impl<T: Display> Display for Vec3<T> {
