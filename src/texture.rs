@@ -12,6 +12,12 @@ impl Texture for Box<dyn Texture> {
     }
 }
 
+impl<T: Texture> Texture for Box<T> {
+    fn eval(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+        self.as_ref().eval(u, v, p)
+    }
+}
+
 #[derive(Clone)]
 pub struct SolidColor {
     pub color: Color3d
@@ -32,25 +38,28 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTexture {
-    pub even: Box<dyn Texture>,
-    pub odd: Box<dyn Texture>,
+pub struct CheckerTexture<T1, T2>
+where T1: Texture, T2: Texture {
+    pub even: T1,
+    pub odd: T2,
 }
 
-impl CheckerTexture {
-    pub fn new(even: Box<dyn Texture>, odd: Box<dyn Texture>) -> Self {
+impl<T1: Texture, T2: Texture> CheckerTexture<T1, T2> {
+    pub fn new(even: T1, odd: T2) -> Self {
         Self { odd, even }
     }
+}
 
+impl CheckerTexture<SolidColor, SolidColor> {
     pub fn for_two_color(c1: Color3d, c2: Color3d) -> Self {
         Self::new(
-            Box::new(SolidColor::new(c1)),
-            Box::new(SolidColor::new(c2))
+            SolidColor::new(c1),
+            SolidColor::new(c2)
         )
     }
 }
 
-impl Texture for CheckerTexture {
+impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
     fn eval(&self, u: f64, v: f64, p: Point3d) -> Color3d {
         let sines = (p.x * 10.0).sin() * (p.y * 10.0).sin() * (p.z * 10.0).sin();
 

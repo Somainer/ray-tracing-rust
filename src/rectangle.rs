@@ -66,21 +66,21 @@ macro_rules! impl_rectangle {
         corner is ($x0: ident, $y0: ident) to ($x1: ident, $y1: ident);
         bounding box is [($min_box_x:expr, $min_box_y: expr, $min_box_z: expr), ($max_box_x: expr, $max_box_y: expr, $max_box_z: expr)];
         normal is ($norm_x: expr, $norm_y: expr, $norm_z: expr);) => {
-        pub struct $rect_name {
+        pub struct $rect_name<M: Material + Send + Sync> {
             p0: Point2d,
             p1: Point2d,
             k: f64,
-            material: Box<dyn Material + Send + Sync>
+            material: M
         }
-        impl $rect_name {
-            pub fn new(p0: Point2d, p1: Point2d, k: f64, material: Box<dyn Material + Send + Sync>) -> Self {
+        impl<M: Material + Send + Sync> $rect_name<M> {
+            pub fn new(p0: Point2d, p1: Point2d, k: f64, material: M) -> Self {
                 Self {
                     p0, p1, k, material
                 }
             }
         }
 
-        impl Hittable for $rect_name {
+        impl<M: Material + Send + Sync> Hittable for $rect_name<M> {
             fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
                 let t = (self.k - ray.origin().$z) / ray.direction().$z;
                 if t < t_min || t > t_max {
@@ -155,33 +155,33 @@ impl Material for DummyMaterial {
     }
 }
 
-pub struct RectBox {
+pub struct RectBox<M: Material + Send + Sync> {
     min: Point3d,
     max: Point3d,
     sides: HittableList,
-    material: Box<dyn Material + Send + Sync>
+    material: M
 }
 
-impl RectBox {
-    pub fn new(min: Point3d, max: Point3d, material: Box<dyn Material + Sync + Send>) -> Self {
+impl<M: Material + Send + Sync> RectBox<M> {
+    pub fn new(min: Point3d, max: Point3d, material: M) -> Self {
         let mut sides = HittableList::new();
-        let dummy = Box::new(DummyMaterial);
+        let dummy = DummyMaterial;
         sides.add(Box::new(
-            XYRect::new((min.x, min.y), (max.x, max.y), min.z, dummy.clone())
+            XYRect::new((min.x, min.y), (max.x, max.y), min.z, dummy)
         ));
         sides.add(Box::new(
-            XYRect::new((min.x, min.y), (max.x, max.y), max.z, dummy.clone())
-        ));
-
-        sides.add(Box::new(
-            XZRect::new((min.x, min.z), (max.x, max.z), min.y, dummy.clone())
-        ));
-        sides.add(Box::new(
-            XZRect::new((min.x, min.z), (max.x, max.z), max.y, dummy.clone())
+            XYRect::new((min.x, min.y), (max.x, max.y), max.z, dummy)
         ));
 
         sides.add(Box::new(
-            YZRect::new((min.y, min.z), (max.y, max.z), min.x, dummy.clone())
+            XZRect::new((min.x, min.z), (max.x, max.z), min.y, dummy)
+        ));
+        sides.add(Box::new(
+            XZRect::new((min.x, min.z), (max.x, max.z), max.y, dummy)
+        ));
+
+        sides.add(Box::new(
+            YZRect::new((min.y, min.z), (max.y, max.z), min.x, dummy)
         ));
         sides.add(Box::new(
             YZRect::new((min.y, min.z), (max.y, max.z), max.x, dummy)
@@ -195,7 +195,7 @@ impl RectBox {
     }
 }
 
-impl Hittable for RectBox {
+impl<M: Material + Send + Sync> Hittable for RectBox<M> {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         self.sides.hit(ray, t_min, t_max).map(|mut record| {
             record.material = self.material.borrow();

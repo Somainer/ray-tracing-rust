@@ -209,7 +209,7 @@ impl HittableList {
 
     pub fn all_feature_box() -> Self {
         let mut boxes1 = Self::new();
-        let ground = || Diffuse::for_color(Color3d::new(0.48, 0.82, 0.53));
+        let ground = Diffuse::for_color(Color3d::new(0.48, 0.82, 0.53));
         let boxes_per_side = 20;
         for i in 0..boxes_per_side {
             for j in 0..boxes_per_side {
@@ -221,7 +221,7 @@ impl HittableList {
                 let y1 = random_range(1.0, 101.0);
                 let z1 = z0 + w;
                 boxes1.add(Box::new(
-                    RectBox::new(Point3d::new(x0, y0, z0), Point3d::new(x1, y1, z1), Box::new(ground()))
+                    RectBox::new(Point3d::new(x0, y0, z0), Point3d::new(x1, y1, z1), ground.clone())
                 ));
             }
         }
@@ -229,48 +229,48 @@ impl HittableList {
 
         objects.add(Box::new(OwnedBVH::new(boxes1.objects, 0.0, 1.0)));
 
-        let light = DiffuseLight::new(Box::new(SolidColor::new(Color3d::only(7.0))));
+        let light = DiffuseLight::new(SolidColor::new(Color3d::only(7.0)));
         objects.add(Box::new(
-            XZRect::new((123.0, 147.0), (423.0, 412.0), 554.0, Box::new(light))
+            XZRect::new((123.0, 147.0), (423.0, 412.0), 554.0, light)
         ));
 
         let center1 = Point3d::new(400.0, 400.0, 200.0);
         let center2 = center1 + Vec3d::new(30.0, 0.0, 0.0);
         let moving_sphere_material = Diffuse::for_color(Color3d::new(0.7, 0.3, 0.1));
-        objects.add(Box::new(MovingSphere::new(center1, center2, 0.0, 1.0, 50.0, Box::new(moving_sphere_material))));
+        objects.add(Box::new(MovingSphere::new(center1, center2, 0.0, 1.0, 50.0, moving_sphere_material)));
         objects.add(Box::new(
-            Sphere::new(Point3d::new(260.0, 150.0, 45.0), 50.0, Box::new(Dielectric{ index_refraction: 1.5 }))
+            Sphere::new(Point3d::new(260.0, 150.0, 45.0), 50.0, Dielectric { index_refraction: 1.5 })
         ));
         objects.add(Box::new(
-            Sphere::new(Point3d::new(0.0, 150.0, 145.0), 50.0, Box::new(Metal { albedo: Color3d::new(0.8, 0.8, 0.9), fuzz: 1.0 }))
+            Sphere::new(Point3d::new(0.0, 150.0, 145.0), 50.0, Metal { albedo: Color3d::new(0.8, 0.8, 0.9), fuzz: 1.0 })
         ));
 
-        let boundary = || Sphere::new(Point3d::new(360.0, 150.0, 145.0), 70.0, Box::new(Dielectric { index_refraction: 1.5 }));
-        objects.add(Box::new(boundary()));
-        objects.add(Box::new(ConstantMedium::for_color(boundary(), 0.2, Color3d::new(0.2, 0.4, 0.9))));
+        let boundary = Sphere::new(Point3d::new(360.0, 150.0, 145.0), 70.0, Dielectric { index_refraction: 1.5 });
+        objects.add(Box::new(boundary.clone()));
+        objects.add(Box::new(ConstantMedium::for_color(boundary.clone(), 0.2, Color3d::new(0.2, 0.4, 0.9))));
         objects.add(Box::new(
             ConstantMedium::for_color(
-                Sphere::new(Point3d::zero(), 5000.0, Box::new(Dielectric{index_refraction: 1.5})),
+                Sphere::new(Point3d::zero(), 5000.0, Dielectric{index_refraction: 1.5}),
                 0.0001,
                 Color3d::one()
             )));
 
         let earth_texture =
             ImageTexture::from_file("earthmap.jpg".to_string()).unwrap();
-        let material = Diffuse::new(Box::new(earth_texture));
+        let material = Diffuse::new(earth_texture);
         objects.add(Box::new(
-            Sphere::new(Point3d::new(400.0, 200.0, 400.0), 100.0, Box::new(material))
+            Sphere::new(Point3d::new(400.0, 200.0, 400.0), 100.0, material)
         ));
 
         let perlin_texture = NoiseTexture::new(0.1);
         objects.add(Box::new(
-            Sphere::new(Point3d::new(220.0, 280.0, 300.0), 80.0, Box::new(Diffuse::new(Box::new(perlin_texture))))
+            Sphere::new(Point3d::new(220.0, 280.0, 300.0), 80.0, Box::new(Diffuse::new(perlin_texture)))
         ));
 
         let mut boxes2 = Self::new();
-        let white = || Diffuse::for_color(Color3d::only(0.73));
+        let white = Diffuse::for_color(Color3d::only(0.73));
         for _ in 0..1000 {
-            boxes2.add(Box::new(Sphere::new(Point3d::random_range(0.0, 165.0), 10.0, Box::new(white()))));
+            boxes2.add(Box::new(Sphere::new(Point3d::random_range(0.0, 165.0), 10.0, white.clone())));
         }
         let node = OwnedBVH::new(boxes2.objects, 0.0, 1.0)
             .rotate_y(Angle::DegAngle(15.0))

@@ -22,6 +22,16 @@ impl Material for Box<dyn Material + Send + Sync> {
     }
 }
 
+impl<M: Material + Send + Sync> Material for Box<M> {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
+        self.as_ref().scatter(ray_in, hit_record)
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+        self.as_ref().emitted(u, v, p)
+    }
+}
+
 macro_rules! no_emission {
     () => {
         #[inline]
@@ -31,23 +41,26 @@ macro_rules! no_emission {
     };
 }
 
-pub struct Diffuse {
-    pub albedo: Box<dyn Texture>
+#[derive(Clone)]
+pub struct Diffuse<T: Texture> {
+    pub albedo: T
 }
 
-impl Diffuse {
+impl<T: Texture> Diffuse<T> {
     #[inline]
-    pub fn new(texture: Box<dyn Texture>) -> Self {
+    pub fn new(texture: T) -> Self {
         Diffuse { albedo: texture }
     }
+}
 
+impl Diffuse<SolidColor> {
     #[inline]
     pub fn for_color(color: Color3d) -> Self {
-        Self::new(Box::new(SolidColor::new(color)))
+        Self::new(SolidColor::new(color))
     }
 }
 
-impl Material for Diffuse {
+impl<T: Texture> Material for Diffuse<T> {
     fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
         let scatter_direction =
             match hit_record.normal + Vec3d::random_in_unit_sphere().normalized() {
@@ -123,17 +136,17 @@ impl Dielectric {
     }
 }
 
-pub struct DiffuseLight {
-    emit: Box<dyn Texture>
+pub struct DiffuseLight<T: Texture> {
+    emit: T
 }
 
-impl DiffuseLight {
-    pub fn new(emit: Box<dyn Texture>) -> Self {
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(emit: T) -> Self {
         Self { emit }
     }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(&self, _ray_in: &Ray, _hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
         None
     }
