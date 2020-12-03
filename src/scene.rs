@@ -5,12 +5,11 @@ use rayon::prelude::*;
 use crate::camera::Camera;
 use crate::color::Color3d;
 use crate::hittable::Hittable;
-use crate::material::Material;
 use crate::ppm::PPMFile;
 use crate::ray::Ray;
 use crate::util::random_double;
 use crate::acceleration::bvh::BVH;
-use crate::hittable_list::{HittableList, LightedWorld};
+use crate::hittable_list::LightedWorld;
 use crate::pdf::{PDF, HittablePDF, PDFExtensions};
 
 pub struct Scene {
@@ -51,7 +50,7 @@ impl Scene {
     }
 
     fn generate_bvh(&self) -> BVH {
-        BVH::new(&self.world.objects,
+        BVH::new(&self.world.objects.objects,
                  self.camera.shutter_open,
                  self.camera.shutter_close)
     }

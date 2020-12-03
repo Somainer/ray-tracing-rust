@@ -1,4 +1,4 @@
-use crate::vec3::{Point3d, Vec3d, Vec3};
+use crate::vec3::{Point3d, Vec3d};
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
 use crate::material::Material;
@@ -6,6 +6,7 @@ use std::borrow::Borrow;
 use crate::acceleration::aabb::AABB;
 use std::ops::Neg;
 use std::f64::consts::{PI, TAU};
+use crate::onb::OrthonormalBasis;
 
 #[derive(Clone)]
 pub struct Sphere<M>
@@ -70,11 +71,31 @@ impl<M: Material + Sync + Send> Hittable for Sphere<M> {
             })
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB::new(
             self.center - Point3d::only(self.radius),
             self.center + Point3d::only(self.radius)
         ))
+    }
+
+    fn pdf_value(&self, origin: Point3d, v: Vec3d) -> f64 {
+        if let Some(_) =
+            self.hit(&Ray::new(origin, v), 0.001, f64::INFINITY) {
+            let cos_theta_max = (1.0 - self.radius * self.radius / (self.center - origin).norm_squared()).sqrt();
+            let solid_angle = TAU * (1.0 - cos_theta_max);
+
+            solid_angle
+        } else {
+            0.0
+        }
+    }
+
+    fn random(&self, origin: Point3d) -> Vec3d {
+        let direction = self.center - origin;
+        let distance_squared = direction.norm_squared();
+        let uvw = OrthonormalBasis::from_w(direction);
+
+        uvw.local(Vec3d::random_to_sphere(self.radius, distance_squared))
     }
 }
 

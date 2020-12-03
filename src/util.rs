@@ -1,7 +1,6 @@
 use std::f64::consts::PI;
 use rand::distributions::Uniform;
 use rand::prelude::*;
-use crate::vec3d_extensions::RandomGen;
 use rand::distributions::uniform::SampleUniform;
 #[macro_export]
 macro_rules! property {
@@ -22,10 +21,10 @@ pub fn rad_to_deg(rad: f64) -> f64 {
 
 pub fn random_double() -> f64 {
     lazy_static::lazy_static!{
-        static ref distribution: Uniform<f64> = Uniform::new(0.0, 1.0);
+        static ref DISTRIBUTION: Uniform<f64> = Uniform::new(0.0, 1.0);
     }
     let mut rng = rand::thread_rng();
-    rng.sample(*distribution)
+    rng.sample(*DISTRIBUTION)
 }
 
 pub fn random_range(min: f64, max: f64) -> f64 {

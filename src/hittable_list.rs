@@ -12,7 +12,6 @@ use crate::image_texture::ImageTexture;
 use crate::rectangle::{XYRect, YZRect, XZRect, RectBox};
 use crate::transformations::Transformable;
 use crate::subsurface::ConstantMedium;
-use std::any::Any;
 use crate::acceleration::bvh::OwnedBVH;
 
 pub struct HittableList {
@@ -207,7 +206,7 @@ impl HittableList {
         world
     }
 
-    pub fn all_feature_box() -> Self {
+    pub fn all_feature_box() -> LightedWorld {
         let mut boxes1 = Self::new();
         let ground = Diffuse::for_color(Color3d::new(0.48, 0.82, 0.53));
         let boxes_per_side = 20;
@@ -225,12 +224,12 @@ impl HittableList {
                 ));
             }
         }
-        let mut objects = Self::new();
+        let mut objects = LightedWorld::new();
 
         objects.add(Box::new(OwnedBVH::new(boxes1.objects, 0.0, 1.0)));
 
         let light = DiffuseLight::new(SolidColor::new(Color3d::only(7.0)));
-        objects.add(Box::new(
+        objects.add_light(Box::new(
             XZRect::new((123.0, 147.0), (423.0, 412.0), 554.0, light)
         ));
 
@@ -365,5 +364,14 @@ impl Hittable for LightedWorld {
 
     fn random(&self, origin: Point3d) -> Vec3d {
         self.objects.random(origin)
+    }
+}
+
+impl From<HittableList> for LightedWorld {
+    fn from(list: HittableList) -> Self {
+        Self {
+            objects: list,
+            lights: HittableList::new()
+        }
     }
 }

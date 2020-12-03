@@ -1,7 +1,8 @@
-use crate::vec3::{Point3d, Vec3d, Vec3};
+use crate::vec3::{Point3d, Vec3d};
 use crate::ray::Ray;
-use crate::util::{deg_to_rad, Angle, random_range};
+use crate::util::{Angle, random_range};
 
+#[allow(dead_code)]
 pub struct Camera {
     origin: Point3d,
     lower_left_corner: Point3d,

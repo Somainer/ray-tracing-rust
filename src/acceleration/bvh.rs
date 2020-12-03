@@ -1,8 +1,6 @@
 use crate::acceleration::aabb::AABB;
-use crate::hittable_list::HittableList;
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
-use std::borrow::Borrow;
 use crate::util::random_in_range;
 use std::cmp::Ordering;
 
@@ -106,7 +104,7 @@ impl<'a> Hittable for BVH<'a> {
         Self::merge_hits(ray, self.objects, &candidates, t_min, t_max)
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(self.root.bounds().clone())
     }
 }
@@ -136,7 +134,7 @@ impl Hittable for OwnedBVH {
         BVH::merge_hits(ray, &self.objects, &candidates, t_min, t_max)
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(self.root.bounds().clone())
     }
 }

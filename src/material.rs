@@ -2,11 +2,10 @@ use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::color::Color3d;
 use crate::vec3::{Point3d, Vec3d};
-use std::ops::{Neg, Deref};
+use std::ops::Neg;
 use crate::util::random_double;
 use crate::texture::{Texture, SolidColor};
 use std::f64::consts::PI;
-use crate::onb::OrthonormalBasis;
 use crate::pdf::{PDF, CosinePDF, NoPDF};
 
 pub struct ScatterRecord<P = Box<dyn PDF>>
@@ -70,7 +69,7 @@ impl<M: Material + Send + Sync> Material for Box<M> {
 macro_rules! no_emission {
     () => {
         #[inline]
-        fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+        fn emitted(&self, _u: f64, _v: f64, _p: Point3d) -> Color3d {
             Color3d::zero()
         }
     };
@@ -79,7 +78,7 @@ macro_rules! no_emission {
 macro_rules! no_scattering_pdf {
     () => {
         #[inline]
-        fn scattering_pdf(&self, ray_in: &Ray, hit_record: &HitRecord, ray_scattered: &Ray) -> f64 {
+        fn scattering_pdf(&self, _ray_in: &Ray, _hit_record: &HitRecord, _ray_scattered: &Ray) -> f64 {
             0.0
         }
     };
@@ -118,7 +117,7 @@ impl<T: Texture> Material for Diffuse<T> {
 
     no_emission!();
 
-    fn scattering_pdf(&self, ray_in: &Ray, hit_record: &HitRecord, ray_scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _ray_in: &Ray, hit_record: &HitRecord, ray_scattered: &Ray) -> f64 {
         let cosine = hit_record.normal.dot(&ray_scattered.direction().normalized());
 
         if cosine < 0.0 {

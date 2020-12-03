@@ -11,7 +11,7 @@ pub struct ImageTexture<Image: GenericImage + Send + Sync> {
 }
 
 impl Texture for ImageTexture<DynamicImage> {
-    fn eval(&self, mut u: f64, mut v: f64, p: Point3d) -> Color3d {
+    fn eval(&self, mut u: f64, mut v: f64, _p: Point3d) -> Color3d {
         u = clamp(u, 0.0, 1.0);
         v = 1.0 - clamp(v, 0.0, 1.0);
 

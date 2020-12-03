@@ -1,9 +1,7 @@
-use crate::vec3::{Point3d, Vec3, Vec3d};
+use crate::vec3::{Point3d, Vec3d};
 use crate::ray::Ray;
 use crate::material::Material;
 use crate::acceleration::aabb::AABB;
-use std::rc::Rc;
-use crate::hittable_list::HittableList;
 
 #[derive(Clone)]
 pub struct HitRecord<'a> {
@@ -49,11 +47,11 @@ pub trait Hittable {
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
 
-    fn pdf_value(&self, origin: Point3d, v: Vec3d) -> f64 {
+    fn pdf_value(&self, _origin: Point3d, _v: Vec3d) -> f64 {
         Default::default()
     }
 
-    fn random(&self, origin: Point3d) -> Vec3d {
+    fn random(&self, _origin: Point3d) -> Vec3d {
         Vec3d::new(1.0, 0.0, 0.0)
     }
 }

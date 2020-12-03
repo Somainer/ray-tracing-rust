@@ -163,7 +163,7 @@ macro_rules! impl_rotation {
                 })
             }
 
-            fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+            fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
                 self.bounds.clone()
             }
         }
@@ -194,7 +194,7 @@ pub struct FlipFace<H: Hittable + Send + Sync> {
 
 impl<H: Hittable + Send + Sync> Hittable for FlipFace<H> {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut hit = self.object.hit(ray, t_min, t_max)?;
+        let hit = self.object.hit(ray, t_min, t_max)?;
         hit.flipped().into()
     }
 

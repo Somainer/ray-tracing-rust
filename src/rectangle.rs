@@ -106,7 +106,7 @@ macro_rules! impl_rectangle {
                 ))
             }
 
-            fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+            fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
                 let ($x0, $y0) = self.p0;
                 let ($x1, $y1) = self.p1;
                 let $z = self.k;
@@ -172,15 +172,15 @@ impl_rectangle! {
 #[derive(Copy, Clone)]
 pub struct DummyMaterial;
 impl Material for DummyMaterial {
-    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
+    fn scatter(&self, _ray_in: &Ray, _hit_record: &HitRecord) -> Option<ScatterRecord> {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3d) -> Color3d {
         Color3d::zero()
     }
 
-    fn scattering_pdf(&self, ray_in: &Ray, hit_record: &HitRecord, ray_scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _ray_in: &Ray, _hit_record: &HitRecord, _ray_scattered: &Ray) -> f64 {
         0.0
     }
 }
@@ -233,7 +233,7 @@ impl<M: Material + Send + Sync> Hittable for RectBox<M> {
         })
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB::new(self.min, self.max))
     }
 }

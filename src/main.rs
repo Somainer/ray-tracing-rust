@@ -8,26 +8,26 @@ use crate::color::Color3d;
 #[macro_use]
 mod util;
 // Macro modules must appear before modules using its macros.
-mod vec3;
-mod ppm;
-mod color;
-mod ray;
-mod hittable;
-mod sphere;
-mod hittable_list;
-mod camera;
-mod material;
-mod vec3d_extensions;
-mod scene;
-mod acceleration;
-mod texture;
-mod perlin;
-mod image_texture;
-mod rectangle;
-mod transformations;
-mod subsurface;
-mod onb;
-mod pdf;
+pub mod vec3;
+pub mod ppm;
+pub mod color;
+pub mod ray;
+pub mod hittable;
+pub mod sphere;
+pub mod hittable_list;
+pub mod camera;
+pub mod material;
+pub mod vec3d_extensions;
+pub mod scene;
+pub mod acceleration;
+pub mod texture;
+pub mod perlin;
+pub mod image_texture;
+pub mod rectangle;
+pub mod transformations;
+pub mod subsurface;
+pub mod onb;
+pub mod pdf;
 
 fn get_scene() -> Scene {
     // let aspect_ratio = 16.0 / 9.0;
@@ -40,7 +40,7 @@ fn get_scene() -> Scene {
     // let world = HittableList::random();
     // let world = HittableList::perlin_noise();
     // let world = HittableList::earth();
-    let world = HittableList::cornel_box();
+    let world = HittableList::all_feature_box();
 
     let aperture = 0.0;
     let dist_to_focus = 10.0;
@@ -64,7 +64,7 @@ fn get_scene() -> Scene {
     let scene = Scene::new(
         image_height,
         image_width,
-        world,
+        world.into(),
         camera,
         samples_per_pixel,
         background,

@@ -88,6 +88,20 @@ impl Vec3d {
 
         Self::new(x, y, z)
     }
+
+    pub fn random_to_sphere(radius: f64, distance_squared: f64) -> Self {
+        let r1 = random_double();
+        let r2 = random_double();
+        let z = 1.0 + r2 * ((1.0 - radius * radius / distance_squared).sqrt() - 1.0);
+
+        let phi = std::f64::consts::TAU * r1;
+        let (sin_phi, cos_phi) = phi.sin_cos();
+        let sqrt_r2 = (1.0 - z * z).sqrt();
+        let x = cos_phi * sqrt_r2;
+        let y = sin_phi * sqrt_r2;
+
+        Self::new(x, y, z)
+    }
 }
 
 impl std::iter::Sum for Vec3d {

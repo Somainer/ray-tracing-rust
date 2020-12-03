@@ -22,6 +22,7 @@ impl AABB {
         )
     }
 
+    #[allow(unused_assignments)]
     pub fn hit(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
         macro_rules! test_on_axis {
             ($axis: ident) => {

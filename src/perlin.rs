@@ -1,4 +1,4 @@
-use crate::util::{random_double, random_in_range};
+use crate::util::random_in_range;
 use crate::vec3::{Point3d, Vec3d};
 use crate::vec3d_extensions::RandomGen;
 
