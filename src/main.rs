@@ -26,23 +26,25 @@ mod image_texture;
 mod rectangle;
 mod transformations;
 mod subsurface;
+mod onb;
+mod pdf;
 
 fn get_scene() -> Scene {
     // let aspect_ratio = 16.0 / 9.0;
     let aspect_ratio = 1.0;
-    let image_width = 800;
+    let image_width = 600;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
 
-    let samples_per_pixel = 10000;
+    let samples_per_pixel = 100;
 
     // let world = HittableList::random();
     // let world = HittableList::perlin_noise();
     // let world = HittableList::earth();
-    let world = HittableList::all_feature_box();
+    let world = HittableList::cornel_box();
 
     let aperture = 0.0;
     let dist_to_focus = 10.0;
-    let look_from = Point3d::new(478.0, 278.0, -600.0);
+    let look_from = Point3d::new(278.0, 278.0, -800.0);
     let look_at = Point3d::new(278.0, 278.0, 0.0);
     // let look_at = Point3d::zero();
     let camera = Camera::new_with_shutter(

@@ -252,5 +252,15 @@ impl<T: Display> Display for Vec3<T> {
     }
 }
 
+impl<T: Default> Default for Vec3<T> {
+    fn default() -> Self {
+        Self::new(
+            Default::default(),
+            Default::default(),
+            Default::default(),
+        )
+    }
+}
+
 pub type Point3d = Vec3<f64>;
 pub type Vec3d = Vec3<f64>;

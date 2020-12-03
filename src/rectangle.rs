@@ -1,4 +1,4 @@
-use crate::material::Material;
+use crate::material::{Material, ScatterRecord};
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
 use crate::acceleration::aabb::AABB;
@@ -6,6 +6,7 @@ use crate::vec3::{Point3d, Vec3d};
 use std::borrow::Borrow;
 use crate::hittable_list::HittableList;
 use crate::color::Color3d;
+use crate::util::random_range;
 
 type Point2d = (f64, f64);
 
@@ -115,6 +116,31 @@ macro_rules! impl_rectangle {
                     Point3d::new($max_box_x, $max_box_y, $max_box_z)
                 ))
             }
+
+            fn pdf_value(&self, origin: Point3d, v: Vec3d) -> f64 {
+                if let Some(hit) = self.hit(&Ray::new(origin, v), 0.001, f64::INFINITY) {
+                    let ($x0, $y0) = self.p0;
+                    let ($x1, $y1) = self.p1;
+                    let area = ($x1 - $x0) * ($y1 - $y0);
+                    let distance_squared = hit.t * hit.t * v.norm_squared();
+                    let cosine = v.dot(&hit.normal).abs() / v.norm();
+
+                    distance_squared / (cosine * area)
+                } else {
+                    0.0
+                }
+            }
+
+            fn random(&self, origin: Point3d) -> Vec3d {
+                let ($x0, $y0) = self.p0;
+                let ($x1, $y1) = self.p1;
+                let mut random_point = Point3d::zero();
+                random_point.$x = random_range($x0, $x1);
+                random_point.$y = random_range($y0, $y1);
+                random_point.$z = self.k;
+
+                random_point - origin
+            }
         }
     };
 }
@@ -146,12 +172,16 @@ impl_rectangle! {
 #[derive(Copy, Clone)]
 pub struct DummyMaterial;
 impl Material for DummyMaterial {
-    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<(Color3d, Ray)> {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterRecord> {
         None
     }
 
     fn emitted(&self, u: f64, v: f64, p: Point3d) -> Color3d {
         Color3d::zero()
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray, hit_record: &HitRecord, ray_scattered: &Ray) -> f64 {
+        0.0
     }
 }
 

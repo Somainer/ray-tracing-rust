@@ -61,6 +61,10 @@ where
     fn rotate_z(self, angle: Angle) -> RotateZ<Self> {
         RotateZ::new(self, angle)
     }
+
+    fn flip(self) -> FlipFace<Self> {
+        FlipFace { object: self }
+    }
 }
 
 impl<T: Hittable + Send + Sync + Sized> Transformable for T {}
@@ -182,4 +186,19 @@ impl_rotation! {
     define RotateZ where
         (x, y, z) - (sin_theta, cos_theta) ->
             (cos_theta * x - sin_theta * y, sin_theta * y + cos_theta * z, z);
+}
+
+pub struct FlipFace<H: Hittable + Send + Sync> {
+    object: H
+}
+
+impl<H: Hittable + Send + Sync> Hittable for FlipFace<H> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut hit = self.object.hit(ray, t_min, t_max)?;
+        hit.flipped().into()
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        self.object.bounding_box(time0, time1)
+    }
 }

@@ -74,6 +74,20 @@ impl Vec3d {
 
         r_out_perpendicular + r_out_parallel
     }
+
+    pub fn random_cosine_direction() -> Self {
+        let r1 = random_double();
+        let r2 = random_double();
+        let z = (1.0 - r2).sqrt();
+
+        let phi = std::f64::consts::TAU * r1;
+        let (sin_phi, cos_phi) = phi.sin_cos();
+        let sqrt_r2 = r2.sqrt();
+        let x = cos_phi * sqrt_r2;
+        let y = sin_phi * sqrt_r2;
+
+        Self::new(x, y, z)
+    }
 }
 
 impl std::iter::Sum for Vec3d {

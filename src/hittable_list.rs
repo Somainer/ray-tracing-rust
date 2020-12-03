@@ -4,7 +4,7 @@ use crate::material::{Diffuse, Metal, Dielectric, DiffuseLight};
 use crate::color::Color3d;
 use crate::sphere::{Sphere, MovingSphere};
 use crate::vec3::{Point3d, Vec3d};
-use crate::util::{random_double, random_range, Angle};
+use crate::util::{random_double, random_range, Angle, random_in_range};
 use crate::vec3d_extensions::RandomGen;
 use crate::acceleration::aabb::AABB;
 use crate::texture::{CheckerTexture, NoiseTexture, SolidColor};
@@ -312,5 +312,58 @@ impl Hittable for HittableList {
         }
 
         result_box
+    }
+
+    fn pdf_value(&self, origin: Point3d, v: Vec3d) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+
+        self.objects.iter().map(|object| {
+            weight * object.pdf_value(origin, v)
+        }).sum()
+    }
+
+    fn random(&self, origin: Point3d) -> Vec3d {
+        self.objects[random_in_range(0, self.objects.len())]
+            .random(origin)
+    }
+}
+
+pub struct LightedWorld {
+    pub objects: HittableList,
+    pub lights: HittableList
+}
+
+impl LightedWorld {
+    pub fn new() -> Self {
+        Self {
+            objects: HittableList::new(),
+            lights: HittableList::new()
+        }
+    }
+
+    pub fn add(&mut self, object: Box<dyn Hittable + Send + Sync>) {
+        self.objects.add(object);
+    }
+
+    pub fn add_light(&mut self, object: Box<dyn Hittable + Send + Sync>) {
+        self.lights.add(object);
+    }
+}
+
+impl Hittable for LightedWorld {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.objects.hit(ray, t_min, t_max)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        self.objects.bounding_box(time0, time1)
+    }
+
+    fn pdf_value(&self, origin: Point3d, v: Vec3d) -> f64 {
+        self.objects.pdf_value(origin, v)
+    }
+
+    fn random(&self, origin: Point3d) -> Vec3d {
+        self.objects.random(origin)
     }
 }

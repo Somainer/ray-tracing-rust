@@ -10,12 +10,13 @@ use crate::ppm::PPMFile;
 use crate::ray::Ray;
 use crate::util::random_double;
 use crate::acceleration::bvh::BVH;
-use crate::hittable_list::HittableList;
+use crate::hittable_list::{HittableList, LightedWorld};
+use crate::pdf::{PDF, HittablePDF, PDFExtensions};
 
 pub struct Scene {
     pub height: usize,
     pub width: usize,
-    pub world: HittableList,
+    pub world: LightedWorld,
     pub camera: Camera,
     pub spp: usize,
     background: Color3d
@@ -25,7 +26,7 @@ impl Scene {
     pub fn new(
         height: usize,
         width: usize,
-        world: HittableList,
+        world: LightedWorld,
         camera: Camera,
         spp: usize,
         background: Color3d
@@ -46,7 +47,7 @@ impl Scene {
         let v = 1.0 - (j as f64 + random_double()) / (self.height - 1) as f64;
         let r = self.camera.get_ray(u, v);
 
-        ray_color(&r, &self.world, &self.background, 50)
+        ray_color(&r, &bvh, &self.world.lights, &self.background, 50)
     }
 
     fn generate_bvh(&self) -> BVH {
@@ -125,13 +126,31 @@ impl Scene {
     }
 }
 
-pub fn ray_color<H: Hittable>(ray: &Ray, world: &H, background: &Color3d, max_depth: i32) -> Color3d {
+pub fn ray_color<H1, H2>(ray: &Ray, world: &H1, lights: &H2, background: &Color3d, max_depth: i32) -> Color3d
+where
+    H1: Hittable + Send + Sync, H2: Hittable + Send + Sync {
     if max_depth <= 0 {
         Color3d::zero()
     } else if let Some(hit) = world.hit(&ray, 0.001, INFINITY) {
         let emitted = hit.material.emitted(hit.u, hit.v, hit.point);
-        if let Some((color, scattered)) = hit.material.scatter(&ray, &hit) {
-            emitted + color * ray_color(&scattered, world, background, max_depth - 1)
+        if let Some(scatter) = hit.material.scatter(&ray, &hit) {
+            if scatter.is_specular {
+                scatter.attenuation
+                    * ray_color(&scatter.specular_ray, world, lights, background, max_depth - 1)
+            } else {
+                let color = scatter.attenuation;
+                let light = HittablePDF::new(lights, hit.point);
+                let pdf = light.mix(scatter.pdf);
+                let scattered =
+                    Ray::new_with_time(hit.point, pdf.generate(), ray.time());
+                let pdf_value = pdf.value(scattered.direction());
+
+                emitted +
+                    color
+                        * hit.material.scattering_pdf(ray, &hit, &scattered)
+                        * ray_color(&scattered, world, lights, background, max_depth - 1)
+                        / pdf_value
+            }
         } else {
             emitted
         }
