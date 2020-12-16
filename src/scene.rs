@@ -60,7 +60,7 @@ impl Scene {
         let pb = self.get_progress_bar();
         let start_time = std::time::Instant::now();
 
-        let buf = (1..self.height).progress_with(pb).flat_map(|j| {
+        let buf = (0..self.height).progress_with(pb).flat_map(|j| {
             let bvh_borrow = &bvh;
             (0..self.width).map(move |i| {
                 (0..self.spp).map(|_| self.render_single(bvh_borrow, i, j)).sum()
