@@ -46,7 +46,7 @@ impl Scene {
         let v = 1.0 - (j as f64 + random_double()) / (self.height - 1) as f64;
         let r = self.camera.get_ray(u, v);
 
-        ray_color(&r, &self.world, &self.background, 50)
+        ray_color(&r, bvh, &self.background, 50)
     }
 
     fn generate_bvh(&self) -> BVH {
@@ -57,20 +57,15 @@ impl Scene {
 
     pub fn render(&self) -> Vec<Color3d> {
         let bvh = self.generate_bvh();
-        let mut buf = vec![Color3d::zero(); self.height * self.width];
         let pb = self.get_progress_bar();
         let start_time = std::time::Instant::now();
 
-        for j in (0..self.height).progress_with(pb) {
-            for i in 0..self.width {
-                let mut color = Color3d::zero();
-                for _ in 0..self.spp {
-                    color += self.render_single(&bvh, i, j);
-                }
-
-                buf[self.get_pixel_index(i, j)] = color;
-            }
-        }
+        let buf = (1..self.height).progress_with(pb).flat_map(|j| {
+            let bvh_borrow = &bvh;
+            (0..self.width).map(move |i| {
+                (0..self.spp).map(|_| self.render_single(bvh_borrow, i, j)).sum()
+            })
+        }).collect();
 
         println!("\nTracing ({}*{}, spp={}) finished in {}.",
                  self.width, self.height, self.spp,
@@ -89,7 +84,7 @@ impl Scene {
         let result = (0..self.height).into_par_iter().progress_with(pb).flat_map(|j| {
             let bvh_borrow = &bvh;
             (0..self.width).into_par_iter().map(move |i| {
-                (0..self.spp).map(|_| self.render_single(bvh_borrow, i, j)).sum::<Color3d>()
+                (0..self.spp).into_par_iter().map(|_| self.render_single(bvh_borrow, i, j)).sum::<Color3d>()
             })
         }).collect();
 

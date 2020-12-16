@@ -26,10 +26,12 @@ impl AABB {
         macro_rules! test_on_axis {
             ($axis: ident) => {
                 let inv_d = 1.0 / ray.direction().$axis;
-                let t0 = (self.minimum.$axis - ray.origin().$axis) * inv_d;
-                let t1 = (self.maximum.$axis - ray.origin().$axis) * inv_d;
-                t_max = t0.max(t1);
-                t_min = t0.min(t1);
+                let candidate_0 = (self.minimum.$axis - ray.origin().$axis) * inv_d;
+                let candidate_1 = (self.maximum.$axis - ray.origin().$axis) * inv_d;
+                let t0 = candidate_0.min(candidate_1);
+                let t1 = candidate_0.max(candidate_1);
+                t_min = t0.max(t_min);
+                t_max = t1.min(t_max);
                 if t_max <= t_min {
                     return false
                 }
