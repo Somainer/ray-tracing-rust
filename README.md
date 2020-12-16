@@ -20,3 +20,6 @@ Example (spp=500):
 
 Cornel Box (spp=10000):
 ![](./images/cornel-box.jpg)
+
+Final Scene of Ray Tracing in Next Week (spp=10000):
+![](./images/final_scene.jpg)
